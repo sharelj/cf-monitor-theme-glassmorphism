@@ -26,6 +26,7 @@ import {
 } from '@/utils/assetRates'
 import { DEFAULT_EXCHANGE_RATES } from '@/utils/financeHelper'
 import { getRegionCode, getRegionDisplayName } from '@/utils/regionHelper'
+import { publicAssetUrl } from '@/cfsm/apiBase'
 import { isHomeLoaded, loadHomeServers } from '@/cfsm/data'
 
 const AssetManageDialog = defineAsyncComponent(() => import('@/components/AssetManageDialog.vue'))
@@ -172,7 +173,14 @@ function premiumTone(amount: number): string {
 }
 
 function flagSrc(region: string): string {
-  return `/images/flags/${getRegionCode(region)}.svg`
+  // 旗帜来自默认皮肤的 /flags/<code>.svg（纯静态托管时回退到 API 源站）
+  return publicAssetUrl(`flags/${getRegionCode(region).toLowerCase()}.svg`)
+}
+
+function onFlagError(event: Event): void {
+  // 无法识别或缺失的地区不显示破图
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
 }
 
 function regionName(region: string): string {
@@ -367,7 +375,7 @@ onBeforeUnmount(() => {
             <tr v-for="detail in rows" :key="detail.uuid" :data-counted="detail.counted" :data-tone="expiryTone(detail)">
               <td>
                 <RouterLink :to="nodePath(detail)" class="assets-node-link" :title="detail.name">
-                  <img v-if="detail.region" :src="flagSrc(detail.region)" alt="" width="14" height="10" loading="lazy">
+                  <img v-if="detail.region" :src="flagSrc(detail.region)" alt="" width="14" height="10" loading="lazy" @error="onFlagError">
                   <span>{{ detail.name }}</span>
                   <small v-if="detail.region">{{ regionName(detail.region) }}</small>
                 </RouterLink>
@@ -408,7 +416,7 @@ onBeforeUnmount(() => {
         <article v-for="detail in rows" :key="detail.uuid" class="assets-card bg-card" :data-counted="detail.counted" :data-tone="expiryTone(detail)">
           <div class="assets-card-head">
             <RouterLink :to="nodePath(detail)" class="assets-node-link">
-              <img v-if="detail.region" :src="flagSrc(detail.region)" alt="" width="14" height="10" loading="lazy">
+              <img v-if="detail.region" :src="flagSrc(detail.region)" alt="" width="14" height="10" loading="lazy" @error="onFlagError">
               <span>{{ detail.name }}</span>
             </RouterLink>
             <strong>{{ detail.counted ? displayMoney(detail.remainingCny) : '—' }}</strong>

@@ -81,6 +81,8 @@ try {
   await pageA.waitForSelector('table.assets-table tbody tr', { timeout: 8000 })
   const assetRows = await pageA.locator('table.assets-table tbody tr').count()
   check('资产管理页展示节点账本', assetRows === 5, `rows=${assetRows}`)
+  const flagLoaded = await pageA.locator('table.assets-table img').first().evaluate(img => img.complete && img.naturalWidth > 0)
+  check('资产页国家旗帜正常加载', flagLoaded, `naturalWidth=${await pageA.locator('table.assets-table img').first().evaluate(img => img.naturalWidth)}`)
   const assetText = await pageA.locator('.assets-view').innerText()
   check('资产管理页展示汇总与到期提醒', /剩余价值|年化/.test(assetText) && /资产管理/.test(assetText), assetText.split('\n').slice(0, 4).join(' | '))
   await pageA.screenshot({ path: path.join(shots, 'assets.png'), fullPage: true })
