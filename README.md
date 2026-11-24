@@ -70,17 +70,46 @@ npm run build:github-page
 
 ### GitHub Actions 自动发布
 
-仓库自带 [`.github/workflows/build-dist.yml`](.github/workflows/build-dist.yml)：
+仓库自带两个构建工作流，产物都只包含 `index.html` + `assets/`：
 
-- 推送到 `main` / `master` 或手动触发时构建；
-- 每次构建以源码 commit 说明作为提交信息，**追加**提交到 `dist` 分支（不 force push）；
-- 配置仓库 Secrets：`API_BASE`、`TITLE`、`BACKGROUND_IMAGE`、`CSP_API`、`CSP_STATIC`；
-- 在仓库 **Settings → Actions → General → Workflow permissions** 勾选 *Read and write permissions*；
-- 在 **Settings → Pages** 选择 `dist` 分支作为托管源。
+| 工作流 | 触发 | 目标分支 | 用途 | 运行时配置 |
+| --- | --- | --- | --- | --- |
+| [`build-store.yml`](.github/workflows/build-store.yml) | 手动触发 / 打 `v*` tag | `theme-dist` | **主题商店 / Worker 同源反代** | `apiBase` 强制留空 |
+| [`build-dist.yml`](.github/workflows/build-dist.yml) | 推送 `main`/`master` 或手动 | `dist` | GitHub Pages / 纯静态演示 | 由 Secrets 注入 `API_BASE` 等 |
+
+- 两个工作流都以源码 commit 说明作为提交信息，**追加**提交（不 force push）。
+- 发布商店 / 同源反代用 `theme-dist`：主题由各用户自己的 Worker 反代，产物里不能带作者自己的 Worker 地址。
+- 纯静态演示用 `dist`：需要配置 Secrets `API_BASE`、`TITLE`、`BACKGROUND_IMAGE`、`CSP_API`、`CSP_STATIC`，并把主题域名加入每个 Worker 的 `CORS_ALLOWED_ORIGINS`。
+- 在仓库 **Settings → Actions → General → Workflow permissions** 勾选 *Read and write permissions*；Pages 演示时在 **Settings → Pages** 选择 `dist` 分支。
 
 ### 发布到主题商店
 
-构建产物（仅 `index.html` + `assets/`）可提交到 [CFSM-Theme-Store](https://github.com/huilang-me/CFSM-Theme-Store) 参与主题商店分发；也可以直接把 `dist` 分支地址作为第三方主题的 GitHub tree 地址使用。
+主题商店只保存索引，主题源码与构建分支由作者自己维护。准备：
+
+1. 推仓库到 GitHub，手动运行 `build-store.yml`，确认 `theme-dist` 分支根目录只有 `index.html` + `assets/`，且 HTML 里 `apiBase` 为空。
+2. 准备封面：把首页截图放到仓库 `docs/images/`，用 `https://raw.githubusercontent.com/<owner>/<repo>/main/docs/images/home.png` 作为 `cover`。
+3. Fork [CFSM-Theme-Store](https://github.com/huilang-me/CFSM-Theme-Store)，在 `themes.json` 的 `themes` 数组追加：
+
+   ```json
+   {
+     "id": "glassmorphism-frost",
+     "title": "Glassmorphism Frost",
+     "cover": "https://raw.githubusercontent.com/<owner>/<repo>/main/docs/images/home.png",
+     "tags": ["Glassmorphism", "Vue", "Earth", "Charts"],
+     "description": {
+       "zh-CN": "Vue 3 玻璃拟态主题：地球/地图、四档卡片、多线路延迟与详情图表。",
+       "en": "A Vue 3 glassmorphism theme with globe/map views, four card densities, multi-line latency and detail charts."
+     },
+     "url": "https://github.com/<owner>/<repo>",
+     "branch": "theme-dist",
+     "author": "<your-name>"
+   }
+   ```
+
+   `id` 必须唯一。商店里已有 `id: "glassmorphism"`（另一位作者的同类主题），请另取 id 与 title，避免覆盖选中状态。
+4. 提交 PR；合并后 Worker 清单缓存 300 秒，约 5 分钟内可见。商店按 commit 固定版本，之后推送 `theme-dist` 新提交即可在面板「加载版本」里选到。
+
+也可以不经过商店，直接在后台填写 `https://github.com/<owner>/<repo>/tree/theme-dist` 使用。
 
 ## 主题设置
 

@@ -15,12 +15,12 @@
 CF-Server-Monitor 只反代第三方主题的 `index.html` 与 `assets/`，主题与 API 天然同源，所以不需要 `CORS_ALLOWED_ORIGINS`，登录 Cookie、WebSocket、`/flags`、`/os-icons` 全部正常。
 
 1. 把本项目推到 GitHub，在 **Settings → Secrets and variables → Actions** 添加：
-   - `API_BASE`：**留空或填 Worker 自己的域名**。被 Worker 反代时主题与 API 同源，`index.html` 里的 `apiBase` 为空即可；填了同源地址也不会出错。
+   - `build-store.yml` 不需要任何 Secret：被 Worker 反代时主题与 API 同源，`apiBase` 必须留空。
    - 可选 `TITLE`、`BACKGROUND_IMAGE`、`CSP_API`、`CSP_STATIC`。
-2. 运行 `.github/workflows/build-dist.yml`（推主分支或手动触发），确认 `dist` 分支已生成，且根目录只有 `index.html` 与 `assets/`。
+2. 运行 `.github/workflows/build-store.yml`（手动触发或打 `v*` tag），确认 `theme-dist` 分支已生成，根目录只有 `index.html` 与 `assets/`，且 `index.html` 里的 `apiBase` 为空。`dist` 分支是带 `API_BASE` 的 Pages 演示产物，不要用于同源反代。
 3. 在 Worker 后台进入 **主题**，填写第三方主题的 GitHub tree 地址，例如：
    ```
-   https://github.com/<你的用户名>/<仓库名>/tree/dist
+   https://github.com/<你的用户名>/<仓库名>/tree/theme-dist
    ```
    面板拉取并预览后切换到该主题（后台管理页始终是内置主题）。
 4. 打开 Worker 根域名验收：

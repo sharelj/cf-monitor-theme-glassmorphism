@@ -1,0 +1,83 @@
+name: Build theme store branch
+
+# 主题商店产物：由各 Worker 同源反代，所以 apiBase 必须留空。
+# Pages 演示产物请使用 build-dist.yml（会注入 API_BASE 等 Secrets）。
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-theme-store
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static page (same-origin, no apiBase)
+        env:
+          # 显式清空，避免仓库级 Secrets 把作者自己的 Worker 地址写进商店产物
+          API_BASE: ''
+          TITLE: ''
+          BACKGROUND_IMAGE: ''
+          CSP_API: ''
+          CSP_STATIC: ''
+        run: npm run build:github-page
+
+      - name: Publish to theme-dist branch
+        env:
+          SOURCE_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${SOURCE_COMMIT_MESSAGE:-}" ]; then
+            MSG="$(printf '%s' "$SOURCE_COMMIT_MESSAGE" | head -n 1)"
+          else
+            MSG="$(git log -1 --pretty=%s)"
+          fi
+          if [ -z "$MSG" ]; then
+            MSG="build theme"
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          rm -rf /tmp/store-output && cp -R dist /tmp/store-output
+
+          if git ls-remote --exit-code --heads origin theme-dist >/dev/null 2>&1; then
+            git fetch origin theme-dist:refs/remotes/origin/theme-dist
+            git worktree add -B theme-dist /tmp/store-branch origin/theme-dist
+          else
+            git worktree add --detach /tmp/store-branch
+            cd /tmp/store-branch
+            git switch --orphan theme-dist
+          fi
+
+          cd /tmp/store-branch
+          git rm -r --ignore-unmatch . >/dev/null
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R /tmp/store-output/. .
+
+          git add -A
+          git commit --allow-empty -m "$MSG"
+          git push origin theme-dist
