@@ -130,6 +130,49 @@ try {
   check('用户选择停止后不静默重连', statsD2.wsOpen === 0, JSON.stringify(statsD2))
   await contextD.close()
   serverD.kill()
+
+  /* ---------------- E. 私有站 + Turnstile ---------------- */
+  const stubTurnstile = route => route.fulfill({
+    status: 200,
+    contentType: 'text/javascript',
+    body: `window.turnstile = {
+      render(el, opts) { setTimeout(() => opts.callback && opts.callback('mock-turnstile-token'), 600); return 'widget-1' },
+      remove() {}, reset() {}
+    }`,
+  })
+
+  // E1：无 JWT，验证后应跳转后台登录
+  const portE1 = 9925
+  const serverE1 = await startServer(portE1, { PRIVATE: '1', TURNSTILE: '1' })
+  const contextE1 = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+  const pageE1 = await contextE1.newPage()
+  await pageE1.route('https://challenges.cloudflare.com/**', stubTurnstile)
+  await pageE1.goto(`http://127.0.0.1:${portE1}/#/`, { waitUntil: 'domcontentloaded' })
+  await pageE1.waitForSelector('.turnstile-gate', { timeout: 8000 })
+  check('私有站 + Turnstile：先显示验证门', true)
+  await pageE1.waitForTimeout(2000)
+  check('私有站 + Turnstile：未登录验证后跳转后台', pageE1.url().includes('/admin#/admin'), pageE1.url())
+  await contextE1.close()
+  serverE1.kill()
+
+  // E2：有 JWT，验证后正常加载
+  const portE2 = 9926
+  const serverE2 = await startServer(portE2, { PRIVATE: '1', TURNSTILE: '1' })
+  const contextE2 = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+  await contextE2.addInitScript(() => localStorage.setItem('jwt_token', 'demo-token'))
+  const pageE2 = await contextE2.newPage()
+  const errorsE2 = []
+  pageE2.on('pageerror', error => errorsE2.push(String(error)))
+  pageE2.on('console', message => { if (message.type() === 'error') errorsE2.push(message.text()) })
+  await pageE2.route('https://challenges.cloudflare.com/**', stubTurnstile)
+  await pageE2.goto(`http://127.0.0.1:${portE2}/#/`, { waitUntil: 'networkidle' })
+  await pageE2.waitForSelector('.node-card', { timeout: 15000 })
+  check('私有站 + Turnstile + JWT：验证后正常加载', (await pageE2.locator('.node-card').count()) === 5, 'cards=5')
+  const statsE2 = await getJson(`http://127.0.0.1:${portE2}/__stats`)
+  check('私有站 + Turnstile + JWT：无 401/403 循环', errorsE2.length === 0, errorsE2.slice(0, 2).join(' | '))
+  check('私有站 + Turnstile + JWT：服务器列表与 WS 正常', statsE2.servers === 1 && statsE2.wsConnections >= 1, JSON.stringify({ servers: statsE2.servers, ws: statsE2.wsConnections }))
+  await contextE2.close()
+  serverE2.kill()
 }
 catch (error) {
   check('测试执行', false, String(error))

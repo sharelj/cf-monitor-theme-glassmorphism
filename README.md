@@ -119,7 +119,7 @@ npm run test:browser
 | 公开站 + Turnstile 关 | 匿名打开首页、WS 正常推送（`test/smoke.mjs`） |
 | 公开站 + Turnstile 开 | 首次验证后缓存 `turnstile_verified` 并复用（`test/smoke-auth.mjs`，用本地 stub 代替验证脚本） |
 | 私有站 + Turnstile 关 | 未登录跳转 `/admin#/admin`，登录后同域 Cookie / 跨域 `token` 连接 WS（`test/smoke-auth.mjs`） |
-| 私有站 + Turnstile 开 | JWT 与 Turnstile 头同时生效；401 清凭证、403 重新验证，不会刷新循环（实现见 `src/cfsm/http.ts`） |
+| 私有站 + Turnstile 开 | 验证门 → 未登录跳转 `/admin#/admin`；带 JWT 时验证后正常加载，401 清凭证、403 重新验证，不会刷新循环（`test/smoke-auth.mjs` 覆盖两种情形） |
 
 > Turnstile 的真实人机验证需要 Cloudflare 的站点密钥与网络环境；本地测试只 stub 验证脚本，不覆盖真实挑战流程。
 

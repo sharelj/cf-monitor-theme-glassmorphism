@@ -2,7 +2,7 @@ import { computed, ref, shallowRef } from 'vue'
 import type { CfSite, CfSiteConfig } from '@/cfsm/types'
 import { getApiBases } from '@/cfsm/apiBase'
 import { getSiteConfig, saveThemeOptions } from '@/cfsm/api'
-import { setPrivateLockBase, setTurnstileEnabled } from '@/cfsm/http'
+import { gotoAdminLogin, setPrivateLockBase, setTurnstileEnabled } from '@/cfsm/http'
 import { getTurnstileVerified, storeTurnstileVerified } from '@/cfsm/turnstile'
 
 /** 已加载的后端站点（多 apiBase 时有多份配置）。 */
@@ -98,7 +98,10 @@ export async function verifyTurnstile(token: string): Promise<void> {
   if (config.turnstile_verified)
     storeTurnstileVerified(config.turnstile_verified)
   turnstileGate.value = null
-  await loadSiteConfigs()
+  const result = await loadSiteConfigs()
+  // 验证通过后才判断私有站是否需要登录
+  if (result === 'private')
+    gotoAdminLogin(gate.base)
 }
 
 export function resetTurnstileGate(): void {
