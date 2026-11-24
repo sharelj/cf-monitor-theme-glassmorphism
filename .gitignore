@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.tsbuildinfo/
+.DS_Store
+*.log
+
+# 本地构建/调试配置与截图
+.env
+.env.local
+test/screenshots/

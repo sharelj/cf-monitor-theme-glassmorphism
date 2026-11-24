@@ -1,0 +1,84 @@
+name: Build and publish dist branch
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-dist
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static page
+        env:
+          API_BASE: ${{ secrets.API_BASE }}
+          TITLE: ${{ secrets.TITLE }}
+          BACKGROUND_IMAGE: ${{ secrets.BACKGROUND_IMAGE }}
+          CSP_API: ${{ secrets.CSP_API }}
+          CSP_STATIC: ${{ secrets.CSP_STATIC }}
+        run: |
+          if [ -z "$API_BASE" ]; then
+            echo "::warning::未配置 API_BASE，构建产物将使用页面同源地址作为后端（仅适用于 Worker 同源托管）"
+          fi
+          npm run build:github-page
+
+      - name: Publish to dist branch
+        env:
+          SOURCE_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          set -euo pipefail
+          # 提交信息沿用触发本次构建的源码 commit 说明
+          if [ -n "${SOURCE_COMMIT_MESSAGE:-}" ]; then
+            MSG="$(printf '%s' "$SOURCE_COMMIT_MESSAGE" | head -n 1)"
+          else
+            MSG="$(git log -1 --pretty=%s)"
+          fi
+          if [ -z "$MSG" ]; then
+            MSG="$(git log -1 --pretty=%s)"
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # 把构建产物复制出来，避免后续 worktree 操作影响
+          rm -rf /tmp/dist-output && cp -R dist /tmp/dist-output
+
+          if git ls-remote --exit-code --heads origin dist >/dev/null 2>&1; then
+            git fetch origin dist:refs/remotes/origin/dist
+            git worktree add -B dist /tmp/dist-branch origin/dist
+          else
+            git worktree add --detach /tmp/dist-branch
+            cd /tmp/dist-branch
+            git switch --orphan dist
+          fi
+
+          cd /tmp/dist-branch
+          git rm -r --ignore-unmatch . >/dev/null
+          # 清理旧文件（保留 .git）
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R /tmp/dist-output/. .
+
+          git add -A
+          git commit --allow-empty -m "$MSG"
+          git push origin dist
