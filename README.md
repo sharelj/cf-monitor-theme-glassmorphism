@@ -95,6 +95,8 @@ npm run build:github-page
 
 ## 本地开发与自查
 
+与真实 Worker 联调的完整步骤见 [docs/integration-worker.md](docs/integration-worker.md)（Worker 反代 / 本地主题连线上 Worker / 本地 wrangler 全栈）。
+
 ```bash
 npm run dev        # 开发服务器；可用 MONITOR_HUB 指定代理目标（默认 http://127.0.0.1:8787）
 npm run typecheck

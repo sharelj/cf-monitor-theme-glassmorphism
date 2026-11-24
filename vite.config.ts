@@ -51,7 +51,8 @@ export default defineConfig(({ mode }) => {
       proxy: apiBase
         ? undefined
         : {
-            '/api': { target: env.MONITOR_HUB ?? 'http://127.0.0.1:8787', changeOrigin: true, ws: true },
+            // 本地 wrangler dev 默认 https 自签证书，secure:false 让代理接受
+            '/api': { target: env.MONITOR_HUB ?? 'http://127.0.0.1:8787', changeOrigin: true, ws: true, secure: false },
           },
     },
     build: {
