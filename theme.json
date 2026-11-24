@@ -2,7 +2,7 @@
   "name": "Glassmorphism · 玻璃拟态",
   "short": "glassmorphism",
   "description": "CF Server Monitor 玻璃拟态主题：地球视图、多线路延迟、负载与费用概览。",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "author": "Gongsc",
   "url": "https://github.com/Gongsc/Theme-Glassmorphism",
   "config": [
@@ -34,6 +34,27 @@
       ],
       "help": "auto=跟随访客系统；beijing=按北京时间日间/夜间；light/dark=固定。",
       "label": "默认主题模式"
+    },
+    {
+      "key": "uiLanguage",
+      "type": "select",
+      "default": "zh",
+      "options": [
+        {
+          "value": "zh",
+          "label": "中文"
+        },
+        {
+          "value": "en",
+          "label": "English"
+        },
+        {
+          "value": "auto",
+          "label": "跟随站点语言"
+        }
+      ],
+      "help": "主题界面以中文为主。zh=固定中文；en=英文格式化（部分标签仍为中文）；auto=跟随 /api/config 的 default_language，auto 时同样按中文处理。",
+      "label": "界面语言"
     },
     {
       "key": "defaultViewMode",
