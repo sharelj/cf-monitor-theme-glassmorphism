@@ -32,6 +32,10 @@ async function startServer(port, env = {}) {
   return child
 }
 
+async function resetStatsFor(port) {
+  await fetch(`http://127.0.0.1:${port}/__reset`)
+}
+
 async function getJson(url) {
   const response = await fetch(url)
   return response.json()
@@ -68,7 +72,31 @@ try {
   check('保存主题设置只发一次 POST', statsA.themeOptions === 1, JSON.stringify(statsA))
   check('登录态无运行时错误', errorsA.length === 0, errorsA.slice(0, 2).join(' | '))
   await pageA.locator('button', { hasText: '关闭' }).first().click().catch(() => {})
+
+  // 资产管理：从顶栏进入
+  const assetButton = pageA.locator('button[data-action="jumpToAssets"]')
+  check('登录后显示资产管理入口', await assetButton.count() === 1)
+  await assetButton.click()
+  await pageA.waitForURL(/#\/assets/, { timeout: 8000 })
+  await pageA.waitForSelector('table.assets-table tbody tr', { timeout: 8000 })
+  const assetRows = await pageA.locator('table.assets-table tbody tr').count()
+  check('资产管理页展示节点账本', assetRows === 5, `rows=${assetRows}`)
+  const assetText = await pageA.locator('.assets-view').innerText()
+  check('资产管理页展示汇总与到期提醒', /剩余价值|年化/.test(assetText) && /资产管理/.test(assetText), assetText.split('\n').slice(0, 4).join(' | '))
+  await pageA.screenshot({ path: path.join(shots, 'assets.png'), fullPage: true })
   await contextA.close()
+
+  // 直接打开资产页：补一次 /api/servers 并展示
+  await resetStatsFor(portA)
+  const contextA2 = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+  await contextA2.addInitScript(() => localStorage.setItem('jwt_token', 'demo-token'))
+  const pageA2 = await contextA2.newPage()
+  await pageA2.goto(`http://127.0.0.1:${portA}/#/assets?manage=1`, { waitUntil: 'networkidle' })
+  await pageA2.waitForSelector('.asset-manage', { timeout: 10000 })
+  check('直接打开资产页可加载节点并打开管理弹窗', true)
+  const statsA2 = await getJson(`http://127.0.0.1:${portA}/__stats`)
+  check('直接打开资产页只补一次 /api/servers', statsA2.servers === 1, JSON.stringify(statsA2))
+  await contextA2.close()
   serverA.kill()
 
   /* ---------------- B. 私有站未登录跳转后台 ---------------- */

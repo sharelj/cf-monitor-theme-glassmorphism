@@ -75,7 +75,7 @@ const TRAFFIC_UNITS: Record<string, number> = {
 /** 流量额度文本（如 "1TB"）→ 字节；空字符串或无法识别时为 0。 */
 export function parseTrafficLimit(value: unknown): number {
   if (typeof value === 'number')
-    return Number.isFinite(value) && value > 0 ? value : 0
+    return Number.isFinite(value) && value > 0 ? value * 1024 ** 3 : 0
   const text = String(value ?? '').trim().toLowerCase().replace(/\s+/g, '')
   if (!text)
     return 0
@@ -85,8 +85,12 @@ export function parseTrafficLimit(value: unknown): number {
   const amount = Number.parseFloat(match[1] ?? '')
   if (!Number.isFinite(amount) || amount <= 0)
     return 0
-  const unit = match[2] || 'b'
-  return amount * (TRAFFIC_UNITS[unit] ?? 1)
+  // CF-Server-Monitor 的 traffic_limit 以 GB 存储（默认主题按 *1024^3 展示）；
+  // 兼容早期写成 "1TB" 一类带单位的文本。
+  const unit = match[2]
+  if (!unit)
+    return amount * 1024 ** 3
+  return amount * (TRAFFIC_UNITS[unit] ?? 1024 ** 3)
 }
 
 const TRAFFIC_CALC_TYPES: Record<string, string> = {
@@ -94,9 +98,11 @@ const TRAFFIC_CALC_TYPES: Record<string, string> = {
   sum: 'sum',
   both: 'sum',
   up: 'up',
+  ul: 'up',
   upload: 'up',
   tx: 'up',
   down: 'down',
+  dl: 'down',
   download: 'down',
   rx: 'down',
   max: 'max',

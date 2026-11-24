@@ -69,6 +69,10 @@ try {
   check('首次进入 /api/servers 只请求一次', counts.servers === 1, JSON.stringify(counts))
 
   // 等 WebSocket 推送，确认数值在变化且没有额外的 REST 请求
+  const firstCardText = await page.locator('.node-card').first().innerText()
+  check('流量上限按 GB→字节换算（不是 KB）', /\/\s*\d+(?:\.\d+)?\s*TB/.test(firstCardText) && !/\/\s*\d+(?:\.\d+)?\s*KB/.test(firstCardText), firstCardText.split('\n').filter(line => /TB|KB|MB/.test(line)).join(' | '))
+  check('中文界面不出现英文日期片段', /在线\s+\d+\s+天/.test(firstCardText) && !/days online|left \d+ days|\/ Year/.test(firstCardText), 'zh labels')
+
   const cpuBefore = await page.locator('.node-card').first().innerText()
   await page.waitForTimeout(2600)
   const cpuAfter = await page.locator('.node-card').first().innerText()
@@ -143,6 +147,15 @@ try {
   check('直接打开详情页历史只请求一次', deepCounts.history === 1, JSON.stringify(deepCounts))
   check('直接打开详情页无异常', deepErrors.length === 0, deepErrors.slice(0, 2).join(' | '))
   await deepContext.close()
+
+  // 英文浏览器 + default_language=auto：主题仍应保持中文
+  const enContext = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'en-US' })
+  const enPage = await enContext.newPage()
+  await enPage.goto(`${BASE}/#/`, { waitUntil: 'networkidle' })
+  await enPage.waitForSelector('.node-card', { timeout: 15000 })
+  const enCardText = await enPage.locator('.node-card').first().innerText()
+  check('auto 语言下英文浏览器不混入英文片段', /在线\s+\d+\s+天/.test(enCardText) && !/days online|left \d+ days|\/ Year/.test(enCardText), enCardText.split('\n').slice(0, 4).join(' | '))
+  await enContext.close()
 
   // 移动端截图
   await context.close()

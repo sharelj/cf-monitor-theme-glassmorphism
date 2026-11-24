@@ -35,7 +35,9 @@ function applySiteConfig(): void {
   document.title = settings.sitename
 
   const language = String(config.default_language ?? 'auto')
-  store.lang = language === 'en' ? 'en-US' : language === 'zh' ? 'zh-CN' : (navigator.language || '').toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN'
+  // 主题界面以中文为主，auto 时固定中文，避免英文浏览器出现中英混排；
+  // 后台显式选择 en 时才使用英文格式化。
+  store.lang = language === 'en' ? 'en-US' : 'zh-CN'
 
   // 访客没有手动选过深浅色时，跟随后台外观设置
   try {

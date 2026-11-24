@@ -5,12 +5,14 @@ import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import MonitorSettings from '@/components/MonitorSettings.vue'
+import { useAssetSettings } from '@/composables/useAssetSettings'
 import { useAppStore } from '@/stores/app'
 import { getPrimarySite } from '@/cfsm/session'
 import faviconUrl from '@/assets/favicon.svg'
 
 const router = useRouter()
 const appStore = useAppStore()
+const { pageVisible: assetPageVisible } = useAssetSettings()
 
 const isScrolled = inject<ReturnType<typeof ref<boolean>>>('isScrolled', ref(false))
 
@@ -50,6 +52,14 @@ const actionButtons = computed(() => {
     })
   }
 
+  if (assetPageVisible.value && router.currentRoute.value.name !== 'assets') {
+    buttons.push({
+      title: '资产管理',
+      icon: 'tabler:report-money',
+      action: 'jumpToAssets',
+    })
+  }
+
   buttons.push({
     title: `${themeTitleMap[appStore.themeMode]}（点击切换）`,
     icon: themeIconMap[appStore.themeMode],
@@ -81,6 +91,9 @@ function handleButtonClick(action: string) {
       break
     case 'toggleHomeTools':
       appStore.homeAdvancedToolsVisible = !appStore.homeAdvancedToolsVisible
+      break
+    case 'jumpToAssets':
+      void router.push('/assets')
       break
     case 'jumpToSetting':
       window.location.assign(adminUrl())

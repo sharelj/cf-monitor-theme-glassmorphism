@@ -8,6 +8,8 @@ import type {
   MeteredTrafficMode,
 } from '@/utils/financeHelper'
 import { Icon } from '@iconify/vue'
+import { useRouter } from 'vue-router'
+import { useAssetSettings } from '@/composables/useAssetSettings'
 import { computed, ref, watch } from 'vue'
 import { AppDialog } from '@/components/ui/app-dialog'
 import { Button } from '@/components/ui/button'
@@ -43,6 +45,14 @@ const emit = defineEmits<{
   'update:rate': [currency: CurrencyCode, value: number]
   'resetRates': []
 }>()
+
+const router = useRouter()
+const { pageVisible: assetPageVisible } = useAssetSettings()
+
+function openAssets() {
+  emit('update:open', false)
+  void router.push('/assets')
+}
 
 const activeTab = ref<FinanceTab>('fixed')
 const visibleNodes = computed(() => props.nodes.filter(node => !props.excludeFree || !isFreeNode(node)))
@@ -251,6 +261,11 @@ function formatTraffic(tib: number): string {
     @update:open="emit('update:open', $event)"
   >
     <div class="space-y-4">
+      <div v-if="assetPageVisible" class="flex justify-end">
+        <Button type="button" size="sm" variant="outline" class="h-8 gap-1.5" @click="openAssets">
+          <Icon icon="tabler:report-money" width="14" height="14" />资产管理
+        </Button>
+      </div>
       <div class="grid grid-cols-3 divide-x divide-border/60 border-y border-border/60 py-3 text-center">
         <div class="min-w-0 px-2">
           <div class="text-xs text-muted-foreground">

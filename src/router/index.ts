@@ -14,6 +14,11 @@ const router = createRouter({
       name: 'instance-detail',
       component: () => import('@/views/InstanceDetail.vue'),
     },
+    {
+      path: '/assets',
+      name: 'assets',
+      component: () => import('@/views/AssetsView.vue'),
+    },
     // 旧链接兼容
     { path: '/instance/:id', redirect: to => ({ name: 'instance-detail', params: to.params }) },
     { path: '/node/:id', redirect: to => ({ name: 'instance-detail', params: to.params }) },

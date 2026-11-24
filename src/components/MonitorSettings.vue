@@ -8,6 +8,7 @@ import { resolveSiteIcon } from '@/monitor/siteIcon'
 import { imageFileToSiteIcon } from '@/utils/siteIconImage'
 import { message } from '@/utils/message'
 import faviconUrl from '@/assets/favicon.svg'
+import { normalizePremiums } from '@/utils/assetCost'
 
 const store = useAppStore()
 const dialog = ref<HTMLDialogElement>()
@@ -22,6 +23,10 @@ const errorText = ref('')
 let alive = true
 const dirty = computed(() => JSON.stringify(values.value) !== JSON.stringify(baseline.value))
 const invalidField = computed(() => configFields.find(field => field.key && !fitsConfigField(field, values.value[field.key])))
+const premiumConfiguredCount = computed(() => Object.keys(normalizePremiums(values.value.assetPremiums)).length)
+function openAssetManager() {
+  window.open(`${location.pathname}#/assets?manage=1`, '_blank', 'noopener')
+}
 
 function preview() {
   if (store.privateFeaturesAllowed && store.publicSettings)
@@ -161,6 +166,14 @@ onBeforeUnmount(() => { alive = false; restorePreview() })
           <input v-else class="site-icon-url" type="text" placeholder="https://example.com/icon.png" :value="siteIconValue" :aria-invalid="!fitsConfigField(field, field.key ? values[field.key] : undefined)" aria-label="站点图标地址" @input="field.key && update(field.key,($event.target as HTMLInputElement).value)">
           <small>{{ field.help }}</small>
           <input ref="iconFile" type="file" accept="image/*" hidden @change="uploadSiteIcon">
+        </div>
+        <div v-else-if="field.key === 'assetPremiums'" class="settings-field">
+          <span>{{ field.label }}</span>
+          <div class="asset-premium-settings">
+            <span>{{ premiumConfiguredCount }} 台已记录</span>
+            <Button variant="outline" size="sm" @click="openAssetManager">前往资产页管理</Button>
+          </div>
+          <small>{{ field.help }}</small>
         </div>
         <label v-else-if="field.key && !(values.backgroundType === 'bing' && (field.key === 'lightBackgroundUrl' || field.key === 'darkBackgroundUrl'))" class="settings-field">
           <span>{{ field.label }}</span>

@@ -2,7 +2,7 @@
   "name": "Glassmorphism · 玻璃拟态",
   "short": "glassmorphism",
   "description": "CF Server Monitor 玻璃拟态主题：地球视图、多线路延迟、负载与费用概览。",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": "Gongsc",
   "url": "https://github.com/Gongsc/Theme-Glassmorphism",
   "config": [
@@ -595,6 +595,87 @@
       "label": "最多显示线路数",
       "min": 1,
       "max": 8
+    },
+    {
+      "type": "title",
+      "label": "10 · 资产管理"
+    },
+    {
+      "key": "showAssetPage",
+      "type": "boolean",
+      "default": true,
+      "help": "在顶栏（含手机端）与首页显示资产管理入口，并开放 /assets 页面。",
+      "label": "启用资产管理"
+    },
+    {
+      "key": "showAssetForGuests",
+      "type": "boolean",
+      "default": false,
+      "help": "允许未登录访客查看资产管理。资产设置本身对所有访客可读，请勿在收购价等字段填写敏感信息。",
+      "label": "访客可见资产"
+    },
+    {
+      "key": "assetCurrency",
+      "type": "select",
+      "default": "CNY",
+      "options": [
+        {
+          "value": "CNY",
+          "label": "人民币 CNY"
+        },
+        {
+          "value": "USD",
+          "label": "美元 USD"
+        },
+        {
+          "value": "EUR",
+          "label": "欧元 EUR"
+        },
+        {
+          "value": "HKD",
+          "label": "港币 HKD"
+        },
+        {
+          "value": "JPY",
+          "label": "日元 JPY"
+        },
+        {
+          "value": "GBP",
+          "label": "英镑 GBP"
+        }
+      ],
+      "help": "台账汇总与明细金额统一换算成该币种；节点原始价格仍按节点自己的币种显示。",
+      "label": "汇总币种"
+    },
+    {
+      "key": "assetRenewalWarningDays",
+      "type": "number",
+      "default": 7,
+      "help": "剩余天数小于等于该值时，在资产页标记为临期（1–365）。",
+      "label": "临期提醒天数",
+      "min": 1,
+      "max": 365
+    },
+    {
+      "key": "assetRateApiUrl",
+      "type": "string",
+      "default": "https://api.frankfurter.dev/v2/rates?base=USD",
+      "help": "可选 Frankfurter、ExchangeRate-API 新版/旧版三个预设，也可填自定义地址；留空使用默认接口。汇率失败时退回缓存或内置参考值。",
+      "label": "汇率接口"
+    },
+    {
+      "key": "assetIgnoredNodes",
+      "type": "string",
+      "default": "",
+      "help": "不计入资产汇总的节点名称或 UUID，多个用逗号、分号或换行分隔；仍会列在明细中并标注「已忽略」。",
+      "label": "排除节点"
+    },
+    {
+      "key": "assetPremiums",
+      "type": "text",
+      "default": "{}",
+      "help": "收购溢价表的 JSON，建议在资产页的「管理」中编辑。键为节点 UUID，值为 { amount, paidCny?, acquiredAt?, acquiredExpiry? }；金额单位为人民币。acquiredExpiry 是收购日到期日期，溢价按「收购日 → 收购日到期日期」摊销；留空则回退节点当前到期日。管理员在资产页填写收购价和收购日期后会自动计算并自动保存。主题设置对所有访客可读。",
+      "label": "收购溢价"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "name": "cf-monitor-theme-glassmorphism",
   "type": "module",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Glassmorphism theme for CF Server Monitor",
   "author": {
@@ -18,7 +18,7 @@
     "build": "vue-tsc --build --force && vite build",
     "build:github-page": "vue-tsc --build --force && vite build --base ./ && node scripts/build-github-page.mjs",
     "preview": "vite preview",
-    "test:unit": "node --experimental-strip-types src/monitor/sparkline.test.ts && node --experimental-strip-types src/monitor/chartGaps.test.ts && node --experimental-strip-types src/monitor/cityMatch.test.ts && node --experimental-strip-types src/monitor/storage.test.ts && node --experimental-strip-types src/monitor/siteIcon.test.ts",
+    "test:unit": "node --experimental-strip-types src/monitor/sparkline.test.ts && node --experimental-strip-types src/monitor/chartGaps.test.ts && node --experimental-strip-types src/monitor/cityMatch.test.ts && node --experimental-strip-types src/monitor/storage.test.ts && node --experimental-strip-types src/monitor/siteIcon.test.ts && node --experimental-strip-types src/utils/assetCost.test.ts",
     "test:browser": "node test/smoke.mjs && node test/smoke-auth.mjs && node test/smoke-multisite.mjs",
     "test": "npm run typecheck && npm run test:unit"
   },
