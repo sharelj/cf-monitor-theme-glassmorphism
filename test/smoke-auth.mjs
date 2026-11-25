@@ -56,6 +56,8 @@ try {
   pageA.on('response', (response) => { if (response.status() >= 400) errorsA.push(`HTTP ${response.status()} ${response.url()}`) })
   await pageA.goto(`http://127.0.0.1:${portA}/#/`, { waitUntil: 'networkidle' })
   await pageA.waitForSelector('.node-card', { timeout: 15000 })
+  const authCardText = await pageA.locator('.node-card').first().innerText()
+  check('管理员登录后仍能看到价格', /HK\$88/.test(authCardText), authCardText.split('\n').slice(0, 4).join(' | '))
   const settingsButton = pageA.locator('button[aria-label="主题设置"]')
   check('登录后显示主题设置入口', await settingsButton.count() === 1)
   await settingsButton.click()

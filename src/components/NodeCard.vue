@@ -152,7 +152,7 @@ const trafficPercentageClass = computed(() => {
 
 // 是否显示金额：未登录且开启「未登录隐藏价格」时不显示价格 / 剩余价值，
 // 但在线天数、剩余天数等非金额信息仍然展示
-const showPrice = computed(() => appStore.privateFeaturesAllowed || !appStore.hidePriceWhenLoggedOut)
+const showPrice = computed(() => appStore.privateFeaturesAllowed || appStore.showPriceForGuests)
 
 const uptimeDaysText = computed(() => {
   const days = getUptimeDays(props.node.uptime)

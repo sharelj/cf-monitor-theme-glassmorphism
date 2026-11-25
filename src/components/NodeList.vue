@@ -59,7 +59,7 @@ function toggleFavorite(node: NodeData): void {
 }
 
 // 未登录且开启「未登录隐藏价格」时，隐藏价格信息
-const showPrice = computed(() => appStore.privateFeaturesAllowed || !appStore.hidePriceWhenLoggedOut)
+const showPrice = computed(() => appStore.privateFeaturesAllowed || appStore.showPriceForGuests)
 
 const baseColumns: ColumnConfig[] = [
   { key: 'status', label: '状态', width: '40px', sortable: false },

@@ -64,7 +64,7 @@ const appStore = useAppStore()
 const nodesStore = useNodesStore()
 const FinanceDetailsDialog = defineAsyncComponent(() => import('@/components/FinanceDetailsDialog.vue'))
 // 未登录且开启「未登录隐藏价格」时，屏蔽金额类信息
-const showPrice = computed(() => appStore.privateFeaturesAllowed || !appStore.hidePriceWhenLoggedOut)
+const showPrice = computed(() => appStore.privateFeaturesAllowed || appStore.showPriceForGuests)
 const exchangeRates = ref(financeHelper.DEFAULT_EXCHANGE_RATES)
 const dailyExchangeRates = ref(financeHelper.DEFAULT_EXCHANGE_RATES)
 const exchangeRateSource = ref<ExchangeRateSource | 'loading'>('loading')
@@ -648,6 +648,7 @@ const EXPIRE_CARD_KEYS = new Set(['expiringNodes'])
 // 站点开关（show_price / show_tf / show_expire）优先于主题卡片方案
 const visibleCards = computed(() => appStore.generalCardOrder
   .filter(key => (appStore.showPrice || !PRICE_CARD_KEYS.has(key))
+    && (showPrice.value || !PRICE_CARD_KEYS.has(key))
     && (appStore.showTraffic || !TRAFFIC_CARD_KEYS.has(key))
     && (appStore.showExpire || !EXPIRE_CARD_KEYS.has(key)))
   .map(getCardDefinition))

@@ -69,6 +69,9 @@ try {
   check('首次进入 /api/servers 只请求一次', counts.servers === 1, JSON.stringify(counts))
 
   // 等 WebSocket 推送，确认数值在变化且没有额外的 REST 请求
+  const guestPageText = await page.locator('.node-info').innerText()
+  check('访客模式隐藏价格与剩余价值', !/HK\$|US\$|€|¥/.test(guestPageText), guestPageText.split('\n').filter(line => /HK\$|US\$|€|¥/.test(line)).join(' | '))
+
   const firstCardText = await page.locator('.node-card').first().innerText()
   check('流量上限按 GB→字节换算（不是 KB）', /\/\s*\d+(?:\.\d+)?\s*TB/.test(firstCardText) && !/\/\s*\d+(?:\.\d+)?\s*KB/.test(firstCardText), firstCardText.split('\n').filter(line => /TB|KB|MB/.test(line)).join(' | '))
   check('中文界面不出现英文日期片段', /在线\s+\d+\s+天/.test(firstCardText) && !/days online|left \d+ days|\/ Year/.test(firstCardText), 'zh labels')
@@ -89,6 +92,7 @@ try {
   await page.waitForTimeout(2500)
   const detailTitle = await page.locator('main').innerText()
   check('详情页展示节点名称', detailTitle.includes('Hong Kong'), detailTitle.slice(0, 40).replace(/\n/g, ' | '))
+  check('访客模式详情页价格被打码', detailTitle.includes('***') && !/HK\$88/.test(detailTitle), detailTitle.split('\n').filter(line => /\*\*\*|HK\$/.test(line)).slice(0, 3).join(' | '))
   counts = await stats()
   check('详情页使用 /api/server 单节点接口', counts.server === 1, JSON.stringify(counts))
   check('详情页负载与延迟共用一次历史请求', counts.history === 1, JSON.stringify(counts))

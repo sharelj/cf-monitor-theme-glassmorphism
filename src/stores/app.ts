@@ -1112,7 +1112,8 @@ const useAppStore = defineStore('app', () => {
 
   const hideAdminEntryWhenLoggedOut = computed<boolean>(() => readBooleanSetting(themeSettings.value, 'hideAdminEntryWhenLoggedOut', false))
 
-  const hidePriceWhenLoggedOut = computed<boolean>(() => readBooleanSetting(themeSettings.value, 'hidePriceWhenLoggedOut', false))
+  /** 访客是否可见价格；默认关闭，避免公开页泄露价格 */
+  const showPriceForGuests = computed<boolean>(() => readBooleanSetting(themeSettings.value, 'showPriceForGuests', false))
 
   const providerAliases = computed<string>(() => readStringSetting(themeSettings.value, 'providerAliases'))
 
@@ -1307,7 +1308,7 @@ const useAppStore = defineStore('app', () => {
     diskPredictionThresholdDays,
     chartDashboardTemplate,
     hideAdminEntryWhenLoggedOut,
-    hidePriceWhenLoggedOut,
+    showPriceForGuests,
     providerAliases,
     probeLineNames,
     homepageMultiPingTaskIds,

@@ -125,7 +125,7 @@ const ipSupport = computed(() => {
 })
 
 // 未登录且开启「未登录隐藏价格」时，屏蔽金额类指标（剩余时间为天数，仍显示）
-const showPrice = computed(() => appStore.showPrice && (appStore.privateFeaturesAllowed || !appStore.hidePriceWhenLoggedOut))
+const showPrice = computed(() => appStore.showPrice && (appStore.privateFeaturesAllowed || appStore.showPriceForGuests))
 
 const formatBytes = (bytes: number) => formatBytesWithConfig(bytes, appStore.byteDecimals)
 const formatBytesPerSecond = (bytes: number) => formatBytesPerSecondWithConfig(bytes, appStore.byteDecimals)
